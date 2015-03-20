@@ -88,13 +88,21 @@ typedef enum
 
 #define SSTP_ATTR_MAX   (_SSTP_ATTR_MAX - 1)
 
+
+typedef enum 
+{
+    SSTP_DIR_RECV   = 0,
+    SSTP_DIR_SEND   = 1
+
+} sstp_dir_t;
+
 /*! 
  * @brief Help trace the packet
  */
-#define sstp_pkt_trace(buf)     \
+#define sstp_pkt_trace(buf, dir) \
     if (SSTP_LOG_TRACE <= sstp_log_level()) \
     {                                       \
-        sstp_pkt_dump(buf, __FILE__, __LINE__);    \
+        sstp_pkt_dump(buf, dir, __FILE__, __LINE__);    \
     }
 
 
@@ -204,6 +212,6 @@ int sstp_attr_len(sstp_attr_st *attr);
 const char *sstp_attr_status_str(int status);
 
 
-void sstp_pkt_dump(sstp_buff_st *buf, const char *file, int line);
+void sstp_pkt_dump(sstp_buff_st *buf, sstp_dir_t dir, const char *file, int line);
 
 #endif /* #ifdef __SSTP_PACKET_H__ */

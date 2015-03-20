@@ -385,7 +385,7 @@ const char *sstp_attr_status_str(int status)
 }
 
 
-void sstp_pkt_dump(sstp_buff_st *buf, const char *file, int line)
+void sstp_pkt_dump(sstp_buff_st *buf, sstp_dir_t dir, const char *file, int line)
 {
     sstp_pkt_st *pkt   = NULL;
     sstp_ctrl_st *ctrl = NULL;
@@ -418,13 +418,20 @@ void sstp_pkt_dump(sstp_buff_st *buf, const char *file, int line)
         "CRYPTO BIND REQ"
     };
 
+    static const char *sstp_dir_type[] =
+    {
+        "RECV",
+        "SEND",
+    };
+
     char hex[255] = {};
 
     pkt    = (sstp_pkt_st*) sstp_buff_data(buf, index);
     index += (sizeof(sstp_pkt_st));
 
     /* Packet Type / Length */
-    sstp_log_msg(SSTP_LOG_TRACE, file, line, "SSTP %s PKT(%d) ", 
+    sstp_log_msg(SSTP_LOG_TRACE, file, line, "%s SSTP %s PKT(%d) ",
+        sstp_dir_type[dir],
         (SSTP_MSG_FLAG_CTRL & pkt->flags) ? "CRTL" : "DATA", 
         (ntohs(pkt->length)));
 
