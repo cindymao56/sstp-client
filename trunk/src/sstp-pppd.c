@@ -204,6 +204,11 @@ static void sstp_pppd_ipup(sstp_pppd_st* ctx, sstp_buff_st *tx)
     uint8_t *buf = sstp_pkt_data(tx);
     uint16_t proto;
 
+    if (buf[0] == 0xFF && buf[1] == 0x03)
+    {
+        buf += 2;
+    }
+
     proto = (ntohs(*(uint16_t *) buf));
     if (proto == SSTP_PPP_IPCP)
     {
@@ -225,6 +230,11 @@ static void sstp_pppd_check_auth(sstp_pppd_st* ctx, sstp_buff_st *tx)
 {
     uint8_t *buf = sstp_pkt_data(tx);
     int ret = 0;
+
+    if (buf[0] == 0xFF && buf[1] == 0x03)
+    {
+        buf += 2;
+    }
 
     /* Check if we have received the MS-CHAPv2(0xC223) credentials */
     switch (ntohs(*(uint16_t*)buf))
