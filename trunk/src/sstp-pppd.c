@@ -351,7 +351,7 @@ static status_t ppp_process_data(sstp_pppd_st *ctx)
             sstp_pppd_ipup(ctx, tx);
         }
 
-        sstp_pkt_trace(tx);
+        sstp_pkt_trace(tx, SSTP_DIR_SEND);
 
         /* Send a PPP frame */
         ret = sstp_stream_send(ctx->stream, tx, (sstp_complete_fn) 
