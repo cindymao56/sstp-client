@@ -203,6 +203,11 @@ static void sstp_pppd_ipup(sstp_pppd_st* ctx, sstp_buff_st *tx)
 {
     uint8_t *buf = sstp_pkt_data(tx);
     uint16_t proto;
+    
+    if (buf[0] == 0xFF && buf[1] == 0x03)
+    {
+        buf += 2;
+    }
 
     if (buf[0] == 0xFF && buf[1] == 0x03)
     {
@@ -230,6 +235,11 @@ static void sstp_pppd_check_auth(sstp_pppd_st* ctx, sstp_buff_st *tx)
 {
     uint8_t *buf = sstp_pkt_data(tx);
     int ret = 0;
+    
+    if (buf[0] == 0xFF && buf[1] == 0x03)
+    {
+        buf += 2;
+    }
 
     if (buf[0] == 0xFF && buf[1] == 0x03)
     {
@@ -346,7 +356,7 @@ static status_t ppp_process_data(sstp_pppd_st *ctx)
         }
 
         /* If plugin is not enabled, then we need to send ip-up */
-        if (ctx->auth_check && !ctx->ip_up)
+        if (ctx->auth_check && ctx->auth_done && !ctx->ip_up)
         {
             sstp_pppd_ipup(ctx, tx);
         }
