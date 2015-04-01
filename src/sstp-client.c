@@ -181,6 +181,11 @@ static void sstp_client_state_cb(sstp_client_st *client, sstp_state_t event)
 
     case SSTP_CALL_ABORT:
     default:
+
+	if (client->pppd) 
+        {
+	    sstp_pppd_stop(client->pppd);
+        }
         sstp_die("Connection was aborted, %s", -1, 
                 sstp_state_reason(client->state));
         break;
