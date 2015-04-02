@@ -1,5 +1,12 @@
 sstp-client (1.0.9) quantal; urgency=high
 
+  * Fixed an issue with staying connected to MikroTik routers.
+  * Ease of troubleshooting with built in PPP packet dump.
+
+ -- Eivind Naess <eivnaes@yahoo.com>  Sat, 4 Apr 2015 08:00:00 -0800
+
+sstp-client (1.0.9) quantal; urgency=high
+
   * Fixed a critical bug that caused received packets to become corrupt, inability to access
     internal web-sites and caused random segfaults. Thanks to Damijan A. for reporting and 
     providing an environment to test in.
