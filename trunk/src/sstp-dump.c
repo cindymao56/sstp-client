@@ -29,13 +29,14 @@
 #include "sstp-ppp.h"
 #include "sstp-private.h"
 
+
 /*!
  * @brief Callback handler(s) per protocol
  */
 typedef struct 
 {
     /* The protocol ID */
-    uint16_t id;
+    uint16_t proto;
 
     /* The name of the protocol */
     const char *name;
@@ -43,10 +44,11 @@ typedef struct
     /* The callback handler designated at processing the protocol */
     int (*fn_cb)(const ppp_hdr_st *pkt, char *msg, int size);
 
-} ppp_proto_t;
+} ppp_handler_st;
 
 
-static const ppp_proto_t *sstp_ppp_proto(int id);
+static const ppp_handler_st *sstp_ppp_handler(int id);
+
 
 #define OPT_ENTRY(x)        \
     { CI_##x, #x }
@@ -64,6 +66,9 @@ static const ppp_proto_t *sstp_ppp_proto(int id);
     [ CHAP_##x ] = { CHAP_##x, #x }
 
 
+/*!
+ * @brief Get the name of the particular code 
+ */
 static const char *sstp_ppp_getcode(int code)
 {
     static const sstp_nval_st codes[] =
@@ -92,6 +97,9 @@ static const char *sstp_ppp_getcode(int code)
 }
 
 
+/*!
+ * @brief Get the name of the CCP option
+ */
 static const char *sstp_ccp_getname(int type)
 {
     int cnt = 0;
@@ -120,6 +128,9 @@ static const char *sstp_ccp_getname(int type)
 }
 
 
+/*!
+ * @brief Get the name of the LCP option
+ */
 static const char *sstp_lcp_getname(int type)
 {
     int cnt = 0;
@@ -395,7 +406,6 @@ static int sstp_lcp_opts(const ppp_hdr_st *pkt, char *buf, int len)
                 }
                 break;
 
-            // TODO: MORE DETAILS
             case CI_AUTH:
             {
                 int auth = ntohs(*(uint16_t*) ((unsigned char*) opt + sizeof(*opt)));
@@ -582,7 +592,7 @@ static int sstp_dump_lcp(const ppp_hdr_st *pkt, char *buf, int len)
         case FSM_CODEREJ:
         {
             int code = ntohs(*(uint16_t*) sstp_ppp_data(pkt));
-            const ppp_proto_t *p = sstp_ppp_proto(code);
+            const ppp_handler_st *p = sstp_ppp_handler(code);
             ret = (p)
                 ? sstp_str_add(buf, &len, &off, " %s", p->name)
                 : sstp_str_add(buf, &len, &off, " %0x%04X", code);
@@ -597,7 +607,7 @@ static int sstp_dump_lcp(const ppp_hdr_st *pkt, char *buf, int len)
         case FSM_ECHOREP:
         case FSM_DISCARDREQ:
 
-            ret = sstp_str_add(buf, &len, &off, " MAGIC: 0x%08x", ntohl(*(uint32_t*) sstp_ppp_data(pkt)));
+            ret = sstp_str_add(buf, &len, &off, " MAGIC: 0x%08X", ntohl(*(uint32_t*) sstp_ppp_data(pkt)));
             if (ret < 0)
             {
                 return -1;
@@ -717,7 +727,7 @@ static int sstp_dump_chap(const ppp_hdr_st *pkt, char *buf, int len)
             ptr += clen;
 
             /* Copy the name associated */
-            memcpy(peer, ptr, MIN((sstp_ppp_data_len(pkt)-clen+1), sizeof(peer)));
+            memcpy(peer, ptr, MIN((sstp_ppp_data_len(pkt)-clen-1), sizeof(peer)));
      
             /* Print the message */
             ret = sstp_str_add(buf, &len, &off, " [%s], NAME: %s", hex, peer);
@@ -801,8 +811,43 @@ static int sstp_dump_ccp(const ppp_hdr_st *pkt, char *buf, int len)
  */
 static int sstp_dump_eap(const ppp_hdr_st *pkt, char *buf, int len)
 {
-    // TODO:
-    return 0;
+    int pos = 0;
+    int ret = 0;
+    int index = 0;
+
+    if (pkt->code < FSM_CONFREQ || 
+        pkt->code > FSM_CONFREJ)
+    {
+        return -1;
+    }
+
+    ret = sstp_str_add(buf, &len, &pos, " %s ", sstp_ppp_getcode(pkt->code));
+    if (ret < 0)
+    {
+        return -1;
+    }
+
+    switch (pkt->code)
+    {
+        case FSM_CONFREQ:
+        case FSM_CONFACK:
+        case FSM_CONFNAK:
+        case FSM_CONFREJ:
+                
+            ret = sstp_bin2hex("0x%02X ", buf + pos, len, sstp_ppp_data(pkt), sstp_ppp_data_len(pkt));
+            if (ret > 0)
+            {
+                pos += ret;
+                len -= ret;
+            }
+
+            break;
+
+        default:
+            break;
+    }
+
+    return pos;
 }
 
 
@@ -871,13 +916,13 @@ static int sstp_dump_pap(const ppp_hdr_st *pkt, char *buf, int len)
     return pos;
 }
 
+
 /*!
  * @brief Get the appropriate code name, and callback handler
  */
-static const ppp_proto_t *sstp_ppp_proto(int id)
+static const ppp_handler_st *sstp_ppp_handler(int proto)
 {
-    int idx = 0;
-    static ppp_proto_t proto[] =
+    static ppp_handler_st handler[] =
     {
         { 0xc223,   "CHAP",     sstp_dump_chap  },
         { 0xc227,   "EAP",      sstp_dump_eap   },
@@ -888,12 +933,13 @@ static const ppp_proto_t *sstp_ppp_proto(int id)
         { 0x8281,   "MPLSCP"                    },  // Multi Protocol Label Switching Control Protocol
         { 0x8235,   "ACSP"                      },  // Appe Client Server Protocol
     };
+    int idx = 0;
 
-    for (idx = 0; idx < SIZEOF_ARRAY(proto); idx++)
+    for (idx = 0; idx < SIZEOF_ARRAY(handler); idx++)
     {
-        if (id == proto[idx].id)
+        if (proto == handler[idx].proto)
         {
-            return &proto[idx];
+            return &handler[idx];
         }
     }
 
@@ -901,42 +947,48 @@ static const ppp_proto_t *sstp_ppp_proto(int id)
 }
 
 
-
 /*!
  * @brief Help dump any of the PPP data negotiation and layered PPP protocols
  */
 static int sstp_dump_ppp(unsigned char *buf, size_t len, const char *file, int line)
 {
-    const ppp_hdr_st *pkt = NULL;
-    const ppp_proto_t *proto = NULL;
+    const ppp_handler_st *hdl = NULL;
     char msg[1024] = {};
     int pos = 0; 
-    int idx = 0;
     int ret = 0;
+    int proto = 0;
 
+    /* Skip PPP frame header */
     if (buf[0] == 0xff && buf[1] == 0x03)
     {
         buf += 2;
         len -= 2;
     }
-    
-    pkt = (ppp_hdr_st*) buf;
 
-    proto = sstp_ppp_proto(ntohs(pkt->proto));
-    if (proto) 
+    /* Get the protocol */
+    proto = ntohs(*(uint16_t*) buf);
+    buf += 2;
+    
+    /* Get the protocol handler */
+    hdl = sstp_ppp_handler(proto);
+    if (hdl) 
     {
+        /* Validate the length */
+        ppp_hdr_st *pkt = (ppp_hdr_st*) buf;
         if (ntohs(pkt->len) == len)
         {
             return -1;
         }
 
-        if (proto->fn_cb)
+        /* If we have know how to process this PPP packect */
+        if (hdl->fn_cb)
         {
-            ret = proto[idx].fn_cb(pkt, msg, sizeof(msg));
+            ret = hdl->fn_cb(pkt, msg, sizeof(msg));
         }
 
+        /* Log the message */
         sstp_log_msg(SSTP_LOG_TRACE, file, line, "  PPP %s ID: %u%s%s", 
-                proto[idx].name, 
+                hdl->name, 
                 pkt->id, 
                 ret > 0 ? " " : "", 
                 ret > 0 ? msg : "");
