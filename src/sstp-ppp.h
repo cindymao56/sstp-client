@@ -120,7 +120,6 @@
 
 typedef struct 
 {
-    uint16_t proto;
     uint8_t code;
     uint8_t id;
     uint16_t len;
