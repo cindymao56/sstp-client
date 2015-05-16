@@ -1,4 +1,4 @@
-%define ppp_version 2.4.5
+%define ppp_version 2.4.6
 %define event_version 2.0.10
 
 Name:		sstp-client

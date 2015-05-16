@@ -9,7 +9,7 @@ LDFLAGS+=$(HARDENING_LDFLAGS)
 
 configure:
     
-    ./configure \
+	./configure \
         --prefix=/usr \
         --sysconfdir=/etc \
         --localstatedir=/var \
@@ -19,6 +19,7 @@ configure:
         --infodir=${prefix}/share/info \
         --disable-dependency-tracking \
         --with-runtime-dir="/var/run/sstpc" \
+	--with-pppd-plugin-dir="/usr/lib/pppd/2.4.6" \
         --enable-user \
         --enable-group
 

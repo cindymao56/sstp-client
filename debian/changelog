@@ -1,9 +1,9 @@
-sstp-client (1.0.9) quantal; urgency=high
+sstp-client (1.0.10-0ubuntu1) vivid; urgency=low
 
   * Fixed an issue with staying connected to MikroTik routers.
   * Ease of troubleshooting with built in PPP packet dump.
 
- -- Eivind Naess <eivnaes@yahoo.com>  Sat, 4 Apr 2015 08:00:00 -0800
+ -- Eivind Naess <eivnaes@yahoo.com>  Sat, 16 May 2015 08:00:00 -0800
 
 sstp-client (1.0.9) quantal; urgency=high
 
