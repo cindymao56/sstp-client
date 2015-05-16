@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Uploaders: Eivind Naess <eivnaes@yahoo.com>
 Build-Depends:
- debhelper (>= 8),
+ debhelper (>= 9),
  ppp-dev,
  libevent-dev,
  libssl-dev,
@@ -16,7 +16,12 @@ Homepage: http://sstp-client.sourceforge.net
 
 Package: sstp-client
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libsstp-client0 (= ${binary:Version}), ppp (>= 2.4.5), adduser
+Depends: 
+ ${shlibs:Depends}, 
+ ${misc:Depends}, 
+ libsstp-client0 (= ${binary:Version}), 
+ ppp (>= 2.4.5), 
+ adduser
 Recommends: network-manager-sstp | network-manager-sstp-gnome
 Description: Connect to a Microsoft Windows 2008 server using SSTP VPN
  A client implementation of Secure Socket Tunneling Protocol (SSTP) for 
