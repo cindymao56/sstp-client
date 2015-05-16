@@ -7,10 +7,8 @@ Build-Depends:
  debhelper (>= 9),
  ppp-dev,
  libevent-dev,
- libssl-dev,
- hardening-includes,
- hardening-wrapper
-Standards-Version: 3.9.3
+ libssl-dev
+Standards-Version: 3.9.6
 Vcs-Svn: https://sstp-client.svn.sourceforge.net/svnroot/sstp-client
 Homepage: http://sstp-client.sourceforge.net
 
