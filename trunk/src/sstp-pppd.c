@@ -278,6 +278,9 @@ static void sstp_pppd_check_auth(sstp_pppd_st* ctx, sstp_buff_st *tx)
         
         sstp_pppd_deltmp(ctx);
 
+        /* Need to flag that auth is done */
+        ctx->auth_done = 1;
+
         /* No need to set the MPPE keys, they are all zero */
         //ret = sstp_state_accept(ctx->state);
         if (SSTP_FAIL == ret)
