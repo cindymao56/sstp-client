@@ -326,7 +326,6 @@ static int sstp_ccp_opts(const ppp_hdr_st *pkt, char *buf, int len)
 {
     ppp_opt_st *opt = (ppp_opt_st*) sstp_ppp_data(pkt);
     ppp_opt_st *next = NULL;
-    int cnt = 0;
     int ret = 0;
     int idx = 0;
     int off = 0;
@@ -380,7 +379,6 @@ static int sstp_lcp_opts(const ppp_hdr_st *pkt, char *buf, int len)
 {
     ppp_opt_st *opt = (ppp_opt_st*) sstp_ppp_data(pkt);
     ppp_opt_st *next = NULL;
-    int cnt = 0;
     int ret = 0;
     int idx = 0;
     int off = 0;
@@ -475,7 +473,6 @@ static int sstp_ipcp_opts(const ppp_hdr_st *pkt, char *buf, int len)
 {
     ppp_opt_st *opt = (ppp_opt_st*) sstp_ppp_data(pkt);
     ppp_opt_st *next = NULL;
-    int cnt = 0;
     int ret = 0;
     int idx = 0;
     int off = 0;
@@ -813,7 +810,6 @@ static int sstp_dump_eap(const ppp_hdr_st *pkt, char *buf, int len)
 {
     int pos = 0;
     int ret = 0;
-    int index = 0;
 
     if (pkt->code < FSM_CONFREQ || 
         pkt->code > FSM_CONFREJ)
@@ -954,7 +950,6 @@ static int sstp_dump_ppp(unsigned char *buf, size_t len, const char *file, int l
 {
     const ppp_handler_st *hdl = NULL;
     char msg[1024] = {};
-    int pos = 0; 
     int ret = 0;
     int proto = 0;
 
