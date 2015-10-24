@@ -1,3 +1,8 @@
+sstp-client (1.0.10-0ubuntu3) wily; urgency=low
+
+  * Re-build for Wily Werewolf
+
+ -- Eivind Naess <eivnaes@yahoo.com>  Sat, 24 Oct 2015 08:00:00 -0800
 sstp-client (1.0.10-0ubuntu2) vivid; urgency=low
 
   * Fixed the HTTP Proxy connection failing
