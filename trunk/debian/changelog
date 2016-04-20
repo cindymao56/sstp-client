@@ -1,3 +1,8 @@
+sstp-client (1.0.10-0ubuntu5) xenial; urgency=low
+
+  * Remove automake files, edits to debian scripts, and rebuild for Xenial Xerus
+
+ -- Eivind Naess <eivnaes@yahoo.com>  Sat, 23 Apr 2015 08:00:00 -0800
 sstp-client (1.0.10-0ubuntu4) wily; urgency=low
 
   * Update to automake 1.15, and rebuild for Wily Werewolf

@@ -16,6 +16,6 @@ PKG_NAME=sstp-client
 (cd $srcdir;
  autoreconf --install --symlink &&
  autoreconf &&
- ./configure
+ ./configure --enable-maintainer-mode $@
 )
 
