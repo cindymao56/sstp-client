@@ -1,3 +1,8 @@
+sstp-client (1.0.10-0ubuntu6) xenial; urgency=low
+
+  * Build scripts update
+
+ -- Eivind Naess <eivnaes@yahoo.com>  Sat, 23 Apr 2015 09:00:00 -0800
 sstp-client (1.0.10-0ubuntu5) xenial; urgency=low
 
   * Remove automake files, edits to debian scripts, and rebuild for Xenial Xerus
