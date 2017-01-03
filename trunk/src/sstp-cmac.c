@@ -86,7 +86,7 @@ void sstp_cmac_recv_key(cmac_ctx_st *ctx, uint8_t *key, int len)
  *  In simplicity, it really means the output of the first operation as the output 
  *  using the appropriate SHA1/256 always return the wanted output length.
  */
-#if OPENSSL_API_COMPAT < 0x10100000L
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 void sstp_cmac_result(cmac_ctx_st *ctx, uint8_t *msg, int mlen, uint8_t *result, int length)
 {
     /* We start with the seed */

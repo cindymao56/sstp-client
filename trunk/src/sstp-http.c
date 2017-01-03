@@ -22,6 +22,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 #include <config.h>
+#include <string.h>
 #include "sstp-private.h"
 
 /*!
@@ -350,7 +351,7 @@ status_t sstp_http_handshake(sstp_http_st *http, sstp_stream_st *stream)
  * @brief Perform Basic authentication for now. Support digest in the 
  *  future.
  */
-#if OPENSSL_API_COMPAT < 0x10100000L
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 static const char *sstp_proxy_basicauth(const char *user, 
         const char *pass, char *buf, int size)
 {
