@@ -29,6 +29,7 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <signal.h>
+#include <string.h>
 
 
 #include "sstp-private.h"

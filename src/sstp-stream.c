@@ -44,6 +44,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/socket.h>
+#include <string.h>
 #include <unistd.h>
 #include <openssl/ssl.h>
 
