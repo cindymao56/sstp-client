@@ -516,7 +516,7 @@ static status_t sstp_init_ssl(sstp_client_st *client, sstp_option_st *opt)
     status = SSL_CTX_set_options(client->ssl_ctx, SSL_OP_NO_COMPRESSION);
     if (status == -1)
     {
-        log_err("Could not set SSL options");
+        log_err("Could not disable compression");
         goto done;
     }
 #endif
@@ -526,7 +526,7 @@ static status_t sstp_init_ssl(sstp_client_st *client, sstp_option_st *opt)
     status = SSL_CTX_set_mode(client->ssl_ctx, SSL_MODE_RELEASE_BUFFERS);
     if (status == -1)
     {
-        log_err("Could not set SSL options");
+        log_err("Could not set option to optimize buffer usage");
         goto done;
     }
 #endif
