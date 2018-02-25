@@ -52,6 +52,9 @@ typedef struct
     /*! The original server string */
     char *server;
 
+    /*! The hostname to use if server is an ip address */
+    char *host;
+
     /*! Unique connection parameter */
     char *ipparam;
 

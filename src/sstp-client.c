@@ -219,7 +219,8 @@ static void sstp_client_state_cb(sstp_client_st *client, sstp_state_t event)
  */
 static void sstp_client_http_done(sstp_client_st *client, int status)
 {
-    int opts = SSTP_VERIFY_NONE;
+    sstp_option_st *opts = &client->option;
+    int vopts = SSTP_VERIFY_NONE;
 
     if (SSTP_OKAY != status)
     {
@@ -231,15 +232,14 @@ static void sstp_client_http_done(sstp_client_st *client, int status)
     client->http = NULL;
 
     /* Set verify options */
-    opts = SSTP_VERIFY_NAME;
-    if (client->option.ca_cert ||
-        client->option.ca_path)
+    vopts = SSTP_VERIFY_NAME;
+    if (opts->ca_cert || opts->ca_path)
     {
-        opts = SSTP_VERIFY_CERT;
+        vopts = SSTP_VERIFY_CERT;
     }
 
     /* Verify the server certificate */
-    status = sstp_verify_cert(client->stream, client->option.server, opts);
+    status = sstp_verify_cert(client->stream, opts->host ?: opts->server, vopts);
     if (SSTP_OKAY != status)
     {
         if (!(SSTP_OPT_CERTWARN & client->option.enable))
@@ -322,18 +322,8 @@ static void sstp_client_proxy_done(sstp_client_st *client, int status)
         sstp_stream_destroy(client->stream);
 
         /* Create the SSL I/O streams */
-        if (SSTP_OPT_TLSEXT & client->option.enable)
-        {
-            log_info("TLS hostname extension is enabled");
-            ret = sstp_stream_create(&client->stream, client->ev_base,
-                    client->ssl_ctx, client->host.name);
-        }
-        else
-        {
-            log_info("TLS hostname extension is disabled");
-            ret = sstp_stream_create(&client->stream, client->ev_base,
-                    client->ssl_ctx, NULL);
-        }
+    	ret = sstp_stream_create(&client->stream, client->ev_base,
+	    	client->ssl_ctx, &client->option);
         if (SSTP_OKAY != ret)
         {
             sstp_die("Could not create I/O stream", -1);
@@ -355,15 +345,17 @@ static void sstp_client_proxy_done(sstp_client_st *client, int status)
         break;
 
     case SSTP_OKAY:
+    {
+        sstp_option_st *opts = &client->option;
 
         log_info("Connected to %s via proxy server", 
-                client->option.server);
+                opts->host ?: opts->server);
 
         /* Re-initialize the HTTP context */
         sstp_http_free(client->http);
 
         /* Create the HTTP handshake context */
-        ret = sstp_http_create(&client->http, client->option.server, (sstp_http_done_fn) 
+        ret = sstp_http_create(&client->http, opts->host ?: opts->server, (sstp_http_done_fn) 
                 sstp_client_http_done, client, SSTP_MODE_CLIENT);
         if (SSTP_OKAY != ret)
         {
@@ -378,7 +370,7 @@ static void sstp_client_proxy_done(sstp_client_st *client, int status)
         }
 
         break;
-
+    }
     default:
 
         sstp_die("Could not connect to proxy server", -1);
@@ -405,8 +397,8 @@ static void sstp_client_proxy_connected(sstp_stream_st *stream, sstp_buff_st *bu
     /* Create the HTTP object if one doesn't already exist */
     if (!client->http) 
     {
-        ret = sstp_http_create(&client->http, client->option.server,
-            (sstp_http_done_fn) sstp_client_proxy_done, client, SSTP_MODE_CLIENT);
+        ret = sstp_http_create(&client->http, client->option.host ?: client->option.server,
+                (sstp_http_done_fn) sstp_client_proxy_done, client, SSTP_MODE_CLIENT);
         if (SSTP_OKAY != ret)
         {
             sstp_die("Could not configure HTTP handshake with server", -1);
@@ -430,23 +422,27 @@ static void sstp_client_proxy_connected(sstp_stream_st *stream, sstp_buff_st *bu
 static status_t sstp_client_connect(sstp_client_st *client, 
         struct sockaddr *addr, int alen)
 {
-    sstp_client_cb complete_cb = (client->option.proxy)
-            ? sstp_client_proxy_connected
-            : sstp_client_connected;
+    sstp_option_st *opts = &client->option;
+    sstp_client_cb complete_cb = sstp_client_proxy_connected;
     status_t ret = SSTP_FAIL;
+ 
+    /* A likely condition */   
+    if (!opts->proxy) 
+    {
+        /* Resolved name is the same as specified, then server is an ip-address */
+        if (!strcmp(client->host.name, opts->server) &&
+             opts->host != NULL) 
+        {
+            /* Use the host per --host option, if specified */
+            strncpy(client->host.name, opts->host, 
+                    sizeof(client->host.name));
+        }
+        complete_cb = sstp_client_connected;
+    }
 
     /* Create the I/O streams */
-    if (SSTP_OPT_TLSEXT & client->option.enable)
-    {
-        log_info("TLS hostname extension is enabled");
-        ret = sstp_stream_create(&client->stream, client->ev_base, client->ssl_ctx, client->host.name);
-    }
-    else
-    {
-        log_info("TLS hostname extension is disabled");
-        ret = sstp_stream_create(&client->stream, client->ev_base, client->ssl_ctx, NULL);
-    }
-
+    ret = sstp_stream_create(&client->stream, client->ev_base, 
+            client->ssl_ctx, opts);
     if (SSTP_OKAY != ret)
     {
         log_err("Could not setup SSL streams");
@@ -454,7 +450,8 @@ static status_t sstp_client_connect(sstp_client_st *client,
     }
 
     /* Have the stream connect */
-    ret = sstp_stream_connect(client->stream, addr, alen, (sstp_complete_fn) complete_cb, client, 10);
+    ret = sstp_stream_connect(client->stream, addr, alen, (sstp_complete_fn)
+            complete_cb, client, 10);
     if (SSTP_INPROG != ret && 
         SSTP_OKAY   != ret)
     {
@@ -851,14 +848,14 @@ int main(int argc, char *argv[])
         }
     }
 
-    /* Lookup the URL of the proxy server */
+    /* Lookup the URL of the server (or proxy if enabled) */
     ret = sstp_client_lookup(client.url, &client.host);
     if (SSTP_OKAY != ret)
     {
         sstp_die("Could not lookup host: `%s'", -1, client.url->host);
     }
-
-    /* Connect to the server */
+ 
+    /* Connect to the server (or proxy if enabled) */
     ret = sstp_client_connect(&client, &client.host.addr, 
             client.host.alen);
     if (SSTP_FAIL == ret)
